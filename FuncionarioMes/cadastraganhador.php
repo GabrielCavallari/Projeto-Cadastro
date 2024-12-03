@@ -65,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mes = strftime('%B');
     $ano = date('Y');
 
+    // $mes = 'Dezembro'; // Valor fixo para teste
+    // $ano = 2023;      // Valor fixo para teste
+
+
     // Realiza o upload da imagem
     $fotoNome = $uploadDir . uniqid() . '-' . basename($foto['name']);
     if (!move_uploaded_file($foto['tmp_name'], $fotoNome)) {
@@ -72,6 +76,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Verificar duplicidade no banco
+
+    // Consulta SQL com placeholders
+    $sqlCheck = "SELECT COUNT(*) as total FROM funcionario_mes WHERE mes = ? AND ano = ?"; 
+    
+    // Preparar e executar o comando com prepare, bind_param e execute()
+    $stmtCheck = $conn->prepare($sqlCheck);
+    $stmtCheck->bind_param("ss", $mes, $ano);
+    $stmtCheck->execute();
+
+    // Obter o resultado com get_result() e extração para um array associativo com fetch_assoc()
+    $resultCheck = $stmtCheck->get_result();
+    $row = $resultCheck->fetch_assoc();
+
+    // Verificar a duplicidade 
+    if ($row['total'] > 0) {
+        echo "<script>alert('Já existe um funcionário cadastrado para este mês e ano!'); window.history.back();</script>";
+        exit;
+    }
+    
     $sql = "INSERT INTO funcionario_mes (nome, vendas, bonus, mes, ano, imagem)
         VALUES (?, ?, ?, ?, ?, ?)";
 
