@@ -1,5 +1,17 @@
 <?php
 
+$host = 'localhost';
+$user = 'root';
+$password = '';
+$dbname = 'projeto_final';
+
+$conn = new mysqli($host, $user, $password, $dbname);
+
+if ($conn->connect_error) {
+    die("Erro de conexão: " . $conn->connect_error);
+}
+
+
 $uploadDir = 'img/'; // Diretório onde as imagens serão armazenadas
 $allowedTypes = ['image/jpeg', 'image/png', 'image/gif']; // Tipos de arquivos permitidos para upload
 
@@ -60,14 +72,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Exibe os dados processados (substituir por inserção no banco no próximo passo)
-    echo "<h1>Dados Recebidos</h1>";
-    echo "<p>Funcionário: $funcionario</p>";
-    echo "<p>Valor da Venda: R$ " . number_format($valor, 2, ',', '.') . "</p>";
-    echo "<p>Bônus: R$ " . number_format($bonus, 2, ',', '.') . "</p>";
-    echo "<p>Mês: $mes</p>";
-    echo "<p>Ano: $ano</p>";
-    echo "<p><img src='$fotoNome' alt='Foto do Funcionário' width='200'></p>";
+    $sql = "INSERT INTO funcionario_mes (nome, vendas, bonus, mes, ano, imagem)
+        VALUES (?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sddsss", $funcionario, $valor, $bonus, $mes, $ano, $fotoNome);
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Funcionário cadastrado com sucesso!'); window.location.href = 'cadastro.php';</script>";
+    } else {
+        echo "<script>alert('Erro ao cadastrar funcionário: " . $stmt->error . "'); window.history.back();</script>";
+    }
+
+    $stmt->close();
+    $conn->close();
+
 }
 
 ?>
